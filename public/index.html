@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0708">
+<title>血腥99</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23d42a3a'/%3E%3Ctext x='32' y='43' font-size='30' font-weight='900' text-anchor='middle' fill='%23fff' font-family='serif'%3E99%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="conn" class="conn" hidden>連線中斷，正在重新連線…</div>
+
+<!-- 首頁 -->
+<section id="screen-home" class="screen home" hidden>
+  <div class="home-inner">
+    <h1 class="logo">血腥99</h1>
+    <p class="tagline">從 99 開始，誰爆誰死。</p>
+    <form id="home-form" class="home-form" novalidate>
+      <label for="name-input">你的暱稱</label>
+      <input id="name-input" type="text" maxlength="12" autocomplete="nickname" placeholder="最多 12 個字">
+      <button type="submit" id="create-btn" class="btn btn-blood">開新房間</button>
+      <div class="home-divider">或加入朋友的房間</div>
+      <label for="code-input">房號</label>
+      <div class="join-row">
+        <input id="code-input" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="4 碼">
+        <button type="button" id="join-btn" class="btn">加入房間</button>
+      </div>
+      <p id="home-error" class="form-error" role="alert"></p>
+    </form>
+  </div>
+</section>
+
+<!-- 房間大廳 -->
+<section id="screen-lobby" class="screen lobby" hidden>
+  <header class="topbar">
+    <div class="logo">血腥99</div>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-open-rules aria-label="規則說明"></button>
+    <button class="icon-btn" data-mute aria-label="靜音"></button>
+    <button class="btn" data-leave>離開房間</button>
+  </header>
+  <div class="lobby-body">
+    <div class="lobby-main" id="lobby-main"></div>
+    <aside class="side" id="lobby-side"></aside>
+  </div>
+</section>
+
+<!-- 牌桌 -->
+<section id="screen-game" class="screen game" hidden>
+  <header class="topbar">
+    <div class="logo">血腥99</div>
+    <div class="room-code"><span class="hide-narrow">房號</span><strong id="game-code"></strong></div>
+    <div class="spacer"></div>
+    <div class="chip" id="game-mode"></div>
+    <div class="muted hide-narrow" id="game-alive"></div>
+    <button class="icon-btn" data-open-rules aria-label="規則說明"></button>
+    <button class="icon-btn" data-mute aria-label="靜音"></button>
+    <button class="icon-btn" data-leave aria-label="離開房間"></button>
+  </header>
+  <div class="game-body">
+    <div class="table-col">
+      <div class="table-area" id="table">
+        <div class="felt" id="felt"></div>
+        <div class="ring"></div>
+        <div id="arrows"></div>
+        <div class="pile deck" id="deck"></div>
+        <div class="pile last" id="last-play"></div>
+        <div class="center" id="center"></div>
+        <div id="seats"></div>
+      </div>
+      <div class="mobile-strip">
+        <div class="latest" id="latest"></div>
+        <button class="btn" data-drawer="log">紀錄</button>
+        <button class="btn" data-drawer="chat">聊天</button>
+      </div>
+      <div class="hand-area">
+        <div class="status-line" id="status-line" aria-live="polite"></div>
+        <div class="hand-row">
+          <div class="hand-info" id="hand-info"></div>
+          <div class="hand" id="hand"></div>
+          <div class="hand-buttons" id="hand-buttons"></div>
+        </div>
+      </div>
+    </div>
+    <aside class="side" id="game-side" data-tab="log">
+      <div class="side-head">
+        <h2 id="side-title">行動紀錄</h2>
+        <button class="btn" id="side-close">回到牌桌</button>
+      </div>
+      <section class="log-panel">
+        <h2 class="panel-title">行動紀錄</h2>
+        <ol class="log-list" id="log-list"></ol>
+      </section>
+    </aside>
+  </div>
+</section>
+
+<!-- 訊息畫面（連線中、在別處開啟等） -->
+<section id="screen-message" class="screen message" hidden>
+  <div class="sheet">
+    <h2 id="message-title">連線中…</h2>
+    <p id="message-text"></p>
+    <button class="btn btn-blood" id="message-btn" hidden></button>
+  </div>
+</section>
+
+<!-- 聊天室（在大廳和牌桌之間搬移） -->
+<section class="chat-panel" id="chat-panel" hidden>
+  <h2 class="panel-title">聊天室</h2>
+  <div class="chat-list" id="chat-list"></div>
+  <form class="chat-form" id="chat-form">
+    <label for="chat-input" class="sr-only">輸入聊天訊息</label>
+    <input id="chat-input" type="text" maxlength="200" autocomplete="off" placeholder="所有人都看得到">
+    <button type="submit" class="btn">送出</button>
+  </form>
+</section>
+
+<div id="overlay-root"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="sound.js"></script>
+<script src="effects.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
