@@ -72,6 +72,7 @@
         <div class="pile last" id="last-play"></div>
         <div class="center" id="center"></div>
         <div id="seats"></div>
+        <div id="bubbles"></div>
       </div>
       <div class="mobile-strip">
         <div class="latest" id="latest"></div>
@@ -79,7 +80,11 @@
         <button class="btn" data-drawer="chat">聊天</button>
       </div>
       <div class="hand-area">
-        <div class="status-line" id="status-line" aria-live="polite"></div>
+        <div class="status-row">
+          <div class="status-line" id="status-line" aria-live="polite"></div>
+          <button type="button" class="btn emote-btn" id="emote-btn" aria-expanded="false" aria-controls="emote-panel" hidden>😏 表情</button>
+        </div>
+        <div class="emote-panel" id="emote-panel" role="menu" aria-label="挑釁表情" hidden></div>
         <div class="hand-row">
           <div class="hand-info" id="hand-info"></div>
           <div class="hand" id="hand"></div>

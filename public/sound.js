@@ -174,13 +174,6 @@
       tone(t, 1.6, { type: 'triangle', freq: 110, freqEnd: 55, peak: 0.3, attack: 0.05 });
       tone(t + 0.1, 1.4, { type: 'sine', freq: 165, freqEnd: 82, peak: 0.15, attack: 0.05 });
     },
-
-    // 常駐心跳：intensity 0～1
-    heartbeat(t, intensity) {
-      const p = 0.18 + intensity * 0.42;
-      thump(t, p);
-      thump(t + 0.17, p * 0.7);
-    },
   };
 
   window.B99Sound = {

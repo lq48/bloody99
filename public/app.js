@@ -11,6 +11,12 @@
   const TARGET = new Set(['A', '5', '7', 'JOKER']);
   const CHOICE = new Set(['10', 'Q']);
   const TEAM_NAME = { red: '紅隊', black: '黑隊' };
+  const EMOTES = [
+    ['ready', '😏 好了沒？'], ['hurry', '⏰ 快一點啦'], ['thatsit', '🤡 就這？'], ['boom', '😈 爆吧！'],
+    ['please', '🙏 拜託不要'], ['scared', '😱 我好怕'], ['respect', '👍 算你狠'], ['gg', '💀 GG'],
+    ['help', '🆘 救救我！'], ['king', '👑 保護國王！'],
+  ];
+  const EMOTE_TEXT = Object.fromEntries(EMOTES);
   const KEY_SESSION = 'b99.session';
   const KEY_NAME = 'b99.name';
   const KEY_MUTED = 'b99.muted';
@@ -47,6 +53,8 @@
     choice: null, // 等待選加或減：{ cardIds, rank, combo }
     target: null, // 等待點選目標：{ cardIds, rank, combo }
     drawer: null, // 手機版展開的面板：'log' | 'chat'
+    emoteOpen: false,
+    emoteUntil: 0, // 冷卻結束時間
     modal: null, // 'rules' | 'leave'
     hideEnd: false,
     busy: false,
@@ -341,6 +349,7 @@
     $('#game-alive').textContent = '存活 ' + g.players.filter((p) => p.alive).length + ' / ' + g.players.length;
     renderHand();
     renderStatus();
+    renderEmoteButton();
     renderLog();
     renderTable(); // 最後量牌桌大小，手牌區已經排好
     tick();
@@ -551,6 +560,68 @@
     return (p.combo ? '組合當 ' : '') + (names[p.rank] || p.rank);
   }
 
+  // ---------- 挑釁表情 ----------
+
+  $('#emote-panel').innerHTML = EMOTES.map(([k, label]) =>
+    '<button type="button" role="menuitem" data-emote="' + k + '">' + label + '</button>').join('');
+
+  function canEmote() {
+    return !!(S && S.game && S.game.you && (S.status === 'playing' || S.status === 'ended'));
+  }
+
+  function renderEmoteButton() {
+    const btn = $('#emote-btn');
+    const ok = canEmote();
+    btn.hidden = !ok;
+    if (!ok) ui.emoteOpen = false;
+    btn.disabled = Date.now() < ui.emoteUntil;
+    btn.setAttribute('aria-expanded', String(ui.emoteOpen));
+    $('#emote-panel').hidden = !ui.emoteOpen;
+  }
+
+  async function sendEmote(key) {
+    ui.emoteOpen = false;
+    ui.emoteUntil = Date.now() + 3000;
+    renderEmoteButton();
+    setTimeout(renderEmoteButton, 3050);
+    const r = await call('emote', { key });
+    if (!r.ok) toast(r.message);
+  }
+
+  function showBubble(memberId, text) {
+    const seat = document.querySelector('[data-seat="' + (window.CSS && CSS.escape ? CSS.escape(memberId) : memberId) + '"]');
+    if (!seat || !text) return;
+    const narrow = isNarrow();
+    const x = parseFloat(seat.style.left);
+    const y = parseFloat(seat.style.top);
+    const old = document.querySelector('#bubbles [data-from="' + memberId + '"]');
+    if (old) old.remove();
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.dataset.from = memberId;
+    b.textContent = text;
+    let top = y - (narrow ? 38 : 46) - 2;
+    if (top < 44) { b.classList.add('below'); top = y + (narrow ? 42 : 52); }
+    b.style.left = x + 'px';
+    b.style.top = top + 'px';
+    $('#bubbles').appendChild(b);
+    // 太靠左右邊緣時往內推，避免被切掉
+    const area = $('#table').clientWidth;
+    const half = b.offsetWidth / 2;
+    if (x - half < 4) b.style.left = (half + 4) + 'px';
+    if (x + half > area - 4) b.style.left = (area - half - 4) + 'px';
+    setTimeout(() => b.remove(), 3000);
+  }
+
+  socket.on('emote', (p) => { if (S && screen === 'game') showBubble(p.memberId, EMOTE_TEXT[p.key]); });
+
+  document.addEventListener('click', (e) => {
+    if (!ui.emoteOpen) return;
+    if (e.target.closest('#emote-panel') || e.target.closest('#emote-btn')) return;
+    ui.emoteOpen = false;
+    renderEmoteButton();
+  });
+
   // ---------- 出牌流程 ----------
 
   function startPlay(cardIds) {
@@ -587,6 +658,8 @@
     const t = e.target.closest('button');
     if (!t) return;
 
+    if (t.id === 'emote-btn') { ui.emoteOpen = !ui.emoteOpen; renderEmoteButton(); return; }
+    if (t.dataset.emote) { sendEmote(t.dataset.emote); return; }
     if (t.dataset.card && !t.disabled) {
       const id = t.dataset.card;
       const c = S.game.you.hand.find((x) => x.id === id);
@@ -746,7 +819,8 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (ui.modal) { ui.modal = null; renderOverlay(); }
+    if (ui.emoteOpen) { ui.emoteOpen = false; renderEmoteButton(); }
+    else if (ui.modal) { ui.modal = null; renderOverlay(); }
     else if (ui.choice || ui.target) { ui.choice = null; ui.target = null; renderAll(); }
     else if (ui.drawer) { ui.drawer = null; applyDrawer(); }
   });

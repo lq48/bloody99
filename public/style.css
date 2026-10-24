@@ -414,6 +414,48 @@ input::placeholder { color: #8a7672; }
 .message .sheet { align-items: center; }
 
 
+/* ---------- 挑釁表情 ---------- */
+
+.hand-area { position: relative; }
+.status-row { display: flex; align-items: center; gap: 12px; }
+.status-row .status-line { flex: 1; min-width: 0; }
+.emote-btn { min-height: 40px; padding: 0 14px; font-size: 14px; flex-shrink: 0; }
+.emote-btn[aria-expanded="true"] { border-color: var(--blood); }
+.emote-panel {
+  position: absolute; right: 24px; bottom: calc(100% + 8px); z-index: 20;
+  width: 360px; padding: 10px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+  background: var(--panel); border: 1px solid var(--blood); border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+}
+.emote-panel button {
+  min-height: 44px; padding: 0 12px; text-align: left;
+  border-radius: 10px; border: 1px solid #3a1c1f; background: #1c0f10;
+  font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.emote-panel button:hover { border-color: var(--blood-text); }
+#bubbles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+.bubble {
+  position: absolute; transform: translate(-50%, -100%);
+  padding: 6px 12px; border-radius: 12px;
+  background: var(--bone); color: var(--panel);
+  font-weight: 700; font-size: 15px; white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  animation: bubble 3s ease forwards;
+}
+.bubble::after {
+  content: ''; position: absolute; left: 50%; top: 100%; margin-left: -6px;
+  border: 6px solid transparent; border-top-color: var(--bone);
+}
+.bubble.below { transform: translate(-50%, 0); }
+.bubble.below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--bone); }
+@keyframes bubble {
+  0% { opacity: 0; margin-top: 8px; }
+  8% { opacity: 1; margin-top: 0; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ---------- 特效 ---------- */
 
 .fx-layer { position: fixed; inset: 0; z-index: 35; pointer-events: none; overflow: hidden; }
@@ -495,6 +537,10 @@ input::placeholder { color: #8a7672; }
   .card.sel { transform: translateY(-14px); }
   .card.sel.playable:hover { transform: translateY(-14px); }
   .hand-buttons { flex-direction: row; width: auto; }
+  .emote-btn { min-height: 36px; padding: 0 10px; font-size: 13px; }
+  .emote-panel { left: 12px; right: 12px; width: auto; }
+  .emote-panel button { font-size: 14px; padding: 0 10px; }
+  .bubble { font-size: 12px; padding: 4px 9px; }
   .hand-buttons .btn { flex: 1; }
 
   .game .side {

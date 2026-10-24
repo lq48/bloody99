@@ -300,34 +300,19 @@
     }
   }
 
-  // ---------- 常駐效果：越接近 99 越紅、心跳越快 ----------
-
-  let heat = 0;
-  let beating = false;
-  let beatTimer = null;
+  // ---------- 常駐效果：越接近 99 越紅（只有畫面，沒有心跳聲） ----------
 
   function update(state) {
     const table = document.querySelector('#table');
     const g = state && state.game;
     const active = !!(g && state.status === 'playing' && gameVisible());
-    heat = active ? Math.max(0, Math.min(1, (g.total - 60) / 39)) : 0;
+    const heat = active ? Math.max(0, Math.min(1, (g.total - 60) / 39)) : 0;
     if (table) {
       table.style.setProperty('--heat', heat.toFixed(3));
       const intensity = Math.max(0, Math.min(1, (heat - 0.5) / 0.5));
       table.style.setProperty('--beat', Math.round(1150 - intensity * 650) + 'ms');
       table.classList.toggle('hot', heat >= 0.75);
     }
-    const shouldBeat = active && g.total >= 80;
-    if (shouldBeat && !beating) { beating = true; scheduleBeat(); }
-    if (!shouldBeat) { beating = false; clearTimeout(beatTimer); }
-  }
-
-  function scheduleBeat() {
-    if (!beating) return;
-    const intensity = Math.max(0, Math.min(1, (heat - 0.5) / 0.5)); // 總數 80→99
-    Sound.play('heartbeat', 0, intensity);
-    const interval = 1150 - intensity * 650; // 每 1.15 秒到 0.5 秒一次
-    beatTimer = setTimeout(scheduleBeat, interval);
   }
 
   window.B99Effects = {
