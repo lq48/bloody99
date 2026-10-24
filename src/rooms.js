@@ -13,6 +13,9 @@ const CHAT_MAX = 200;
 const CHAT_KEEP = 100;
 const LOG_KEEP = 300;
 const LOG_SEND = 80;
+const EMOTE_COOLDOWN_MS = 3000;
+// 挑釁表情：只傳代號，文字由畫面決定，避免被塞入任意內容
+const EMOTES = new Set(['ready', 'hurry', 'thatsit', 'boom', 'please', 'scared', 'respect', 'gg', 'help', 'king']);
 
 /**
  * 房間管理：開房、加入、房主、斷線重連、觀戰、再來一局、聊天。
@@ -269,6 +272,27 @@ class RoomManager {
     return {};
   }
 
+  /** 挑釁表情：遊戲中的玩家（含已出局）可以使用，每人每 3 秒一次。 */
+  emote(socketId, { key } = {}) {
+    const { room, member } = this._ctx(socketId);
+    if (room.status !== 'playing' && room.status !== 'ended') {
+      throw new GameError('BAD_PHASE', '遊戲開始後才能使用表情');
+    }
+    if (!room.game.players.some((p) => p.id === member.id)) {
+      throw new GameError('NOT_PLAYER', '觀戰者不能使用表情');
+    }
+    if (!EMOTES.has(key)) throw new GameError('BAD_EMOTE', '沒有這個表情');
+    const t = this.now();
+    if (member.lastEmote && t - member.lastEmote < EMOTE_COOLDOWN_MS) {
+      throw new GameError('EMOTE_TOO_FAST', '表情送太快了，等一下再送');
+    }
+    member.lastEmote = t;
+    for (const m of room.members) {
+      if (m.connected && m.socketId) this.send(m.socketId, 'emote', { memberId: member.id, key, at: t });
+    }
+    return {};
+  }
+
   /** 伺服器關閉時清掉所有計時器。 */
   shutdown() {
     this.closed = true;
@@ -295,6 +319,7 @@ class RoomManager {
       timer: null,
       disconnectDeadline: null,
       chatTimes: [],
+      lastEmote: 0,
     };
     room.members.push(member);
     this.byToken.set(member.token, { code: room.code, memberId: member.id });
@@ -479,4 +504,4 @@ class RoomManager {
   }
 }
 
-module.exports = { RoomManager, CODE_CHARS, MAX_PLAYERS };
+module.exports = { RoomManager, CODE_CHARS, MAX_PLAYERS, EMOTES };

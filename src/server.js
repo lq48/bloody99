@@ -55,6 +55,7 @@ function startServer({ port = Number(process.env.PORT) || 3000, ...managerOption
     handle('action', (p) => manager.action(socket.id, p));
     handle('backToLobby', () => manager.backToLobby(socket.id));
     handle('chat', (p) => manager.chat(socket.id, p));
+    handle('emote', (p) => manager.emote(socket.id, p));
 
     socket.on('disconnect', () => {
       try {
